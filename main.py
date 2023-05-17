@@ -7,7 +7,7 @@ import json
 def tokenize(text):
     return re.findall(r'\b\w+\b', text.lower())
 
-def create_inverted_index(csv_filename):
+def create_inverted_index(csv_filename): # инвертированный индекс
     inverted_index = defaultdict(set)
     with open(csv_filename, 'r') as f:
         reader = csv.DictReader(f)
@@ -148,5 +148,5 @@ def save_search_results_to_file(results, filename):
 
 query = "Ректор СПбГУ"
 matching_post_ids = search(query, loaded_index)
-matching_messages = get_matching_messages('posts_SPbU.csv', matching_post_ids)
+matching_messages = get_matching_messages('posts_MGU.csv', matching_post_ids)
 save_search_results_to_file(matching_messages, 'search_results.txt')
