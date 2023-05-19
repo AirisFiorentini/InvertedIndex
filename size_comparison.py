@@ -17,4 +17,4 @@ def compare_file_sizes(file1, file2):
     else:
         print("Both files are of the same size")
 
-# Call Example: compare_file_sizes('inverted_index.json', 'compressed_index.json')
+# Call Example: compare_file_sizes('inverted_index.json', 'gamma_compressed_index.json')

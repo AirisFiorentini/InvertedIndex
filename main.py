@@ -9,7 +9,7 @@ def tokenize(text):
 
 def create_inverted_index(csv_filename): # инвертированный индекс
     inverted_index = defaultdict(set)
-    with open(csv_filename, 'r') as f:
+    with open(csv_filename, 'r', encoding="utf8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             post_id = int(row['post_id'])
@@ -162,71 +162,73 @@ def search(query, index):
         
     return result
 
-# Создание, сжатие, сохранение и загрузка индекса
-inverted_index = create_inverted_index('posts_SPbU.csv')
-delta_compressed_index = delta_compress_inverted_index(inverted_index)
-gamma_compressed_index = gamma_compress_inverted_index(inverted_index)
-# gamma_compressed_index = gamma_compress_inverted_index(delta_compressed_index)
-
-# Сохранение сжатого индекса в файл
-save_index_to_file(inverted_index, 'inverted_index.json')
-# save_compressed_index_to_file(delta_compressed_index, 'delta_compressed_index.json')
-# Сохранение сжатого индекса в файл
-save_compressed_index_to_file(delta_compressed_index, 'delta_compressed_index.json')
-
-# Загрузка сжатого индекса из файла
-with open('delta_compressed_index.json', 'r') as f:
-    loaded_delta_index = json.load(f)
-
-save_compressed_index_to_file(gamma_compressed_index, 'gamma_compressed_index.json')
-
-# Загрузка сжатого индекса из файла и декодирование его обратно в числовую форму
-loaded_index = load_index('compressed_index.json')
-delta_loaded_index = load_and_decode_delta_index('delta_compressed_index.json')
-# gamma_loaded_index = load_and_decode_gamma_index('gamma_compressed_index.json')
-
-# delta_encoded_index = {word: [delta_encode(post_id) for post_id in post_ids] for word, post_ids in inverted_index.items()}
-# save_compressed_index_to_file(delta_encoded_index, 'delta_compressed_index.json')
-# delta_loaded_index = load_and_decode_index('delta_compressed_index.json', delta_decode)
-
-
-# delta_loaded_index = load_and_decode_index('delta_compressed_index.json', delta_decode)
-gamma_loaded_index = load_and_decode_gamma_index('gamma_compressed_index.json')
-
-
-query = "Ректор СПбГУ"
-matching_post_ids = search(query, gamma_loaded_index)
-print(f"Post IDs matching the query '{query}': {matching_post_ids}")
-
 def get_matching_messages(csv_filename, matching_post_ids):
     matching_messages = []
-    with open(csv_filename, 'r') as f:
+    with open(csv_filename, 'r', encoding="utf8") as f:
         reader = csv.DictReader(f)
         for row in reader:
             if int(row['post_id']) in matching_post_ids:
                 matching_messages.append(row['text'])
     return matching_messages
 
-query = "Ректор СПбГУ"
-matching_post_ids = search(query, gamma_loaded_index)
-matching_messages = get_matching_messages('posts_SPbU.csv', matching_post_ids)
-print(f"Messages matching the query '{query}': {matching_messages}")
-
-# def save_search_results_to_file(results, filename):
-#     with open(filename, 'w') as f:
-#         json.dump(results, f)
-
-# query = "Ректор СПбГУ"
-# matching_post_ids = search(query, loaded_index)
-# matching_messages = get_matching_messages('posts_SPbU.csv', matching_post_ids)
-# save_search_results_to_file(matching_messages, 'search_results.json')
-
 def save_search_results_to_file(results, filename):
-    with open(filename, 'w') as f:
+    with open(filename, 'w', encoding="utf8") as f:
         for message in results:
-            f.write(message + '\n')
+            f.write(message + '\n' + '-'*120 + '\n')
 
-query = "Ректор СПбГУ"
-matching_post_ids = search(query, gamma_loaded_index)
-matching_messages = get_matching_messages('posts_SPbU.csv', matching_post_ids)
-save_search_results_to_file(matching_messages, 'search_results.txt')
+if __name__ == "__main__":
+    # Создание, сжатие, сохранение и загрузка индекса
+    inverted_index = create_inverted_index('posts_SPbU.csv')
+    delta_compressed_index = delta_compress_inverted_index(inverted_index)
+    gamma_compressed_index = gamma_compress_inverted_index(inverted_index)
+    # gamma_compressed_index = gamma_compress_inverted_index(delta_compressed_index)
+
+    # Сохранение сжатого индекса в файл
+    save_index_to_file(inverted_index, 'inverted_index.json')
+    # save_compressed_index_to_file(delta_compressed_index, 'delta_compressed_index.json')
+    # Сохранение сжатого индекса в файл
+    save_compressed_index_to_file(delta_compressed_index, 'delta_compressed_index.json')
+
+    # Загрузка сжатого индекса из файла
+    with open('delta_compressed_index.json', 'r') as f:
+        loaded_delta_index = json.load(f)
+
+    save_compressed_index_to_file(gamma_compressed_index, 'gamma_compressed_index.json')
+
+    # Загрузка сжатого индекса из файла и декодирование его обратно в числовую форму
+    loaded_index = load_index('gamma_compressed_index.json')
+    delta_loaded_index = load_and_decode_delta_index('delta_compressed_index.json')
+    # gamma_loaded_index = load_and_decode_gamma_index('gamma_compressed_index.json')
+
+    # delta_encoded_index = {word: [delta_encode(post_id) for post_id in post_ids] for word, post_ids in inverted_index.items()}
+    # save_compressed_index_to_file(delta_encoded_index, 'delta_compressed_index.json')
+    # delta_loaded_index = load_and_decode_index('delta_compressed_index.json', delta_decode)
+
+
+    # delta_loaded_index = load_and_decode_index('delta_compressed_index.json', delta_decode)
+    gamma_loaded_index = load_and_decode_gamma_index('gamma_compressed_index.json')
+
+
+    query = "Ректор СПбГУ"
+    matching_post_ids = search(query, gamma_loaded_index)
+    print(f"Post IDs matching the query '{query}': {matching_post_ids}")
+
+    query = "Ректор СПбГУ"
+    matching_post_ids = search(query, gamma_loaded_index)
+    matching_messages = get_matching_messages('posts_SPbU.csv', matching_post_ids)
+    new_line = '\n' + '-'*120 + '\n'
+    print(f"Messages matching the query '{query}': {new_line.join(matching_messages)}")
+
+    # def save_search_results_to_file(results, filename):
+    #     with open(filename, 'w') as f:
+    #         json.dump(results, f)
+
+    # query = "Ректор СПбГУ"
+    # matching_post_ids = search(query, loaded_index)
+    # matching_messages = get_matching_messages('posts_SPbU.csv', matching_post_ids)
+    # save_search_results_to_file(matching_messages, 'search_results.json')
+
+    query = "Ректор СПбГУ"
+    matching_post_ids = search(query, gamma_loaded_index)
+    matching_messages = get_matching_messages('posts_SPbU.csv', matching_post_ids)
+    save_search_results_to_file(matching_messages, 'search_results.txt')
