@@ -21,4 +21,18 @@ def compare_file_sizes(file1, file2):
 
 # Call Example: compare_file_sizes('inverted_index.json', 'gamma_compressed_index.json')
 compare_file_sizes('inverted_index.json', 'delta_compressed_index.json'), print()
-compare_file_sizes('inverted_index.json', 'gamma_compressed_index.json')
+compare_file_sizes('inverted_index.json', 'gamma_compressed_index.json'), print()
+compare_file_sizes('inverted_index.json', 'delta_gamma_compressed_index.json'), print()
+
+from pympler import asizeof
+
+original_size = asizeof.asizeof('inverted_index.json')
+delta_compressed_size = asizeof.asizeof('delta_compressed_index.json')
+gamma_compressed_size = asizeof.asizeof('gamma_compressed_index.json')
+delta_gamma_compressed_size = asizeof.asizeof('delta_gamma_compressed_index.json')
+
+print(f"Original index size: {original_size}")
+print(f"Delta compressed index size: {delta_compressed_size}")
+print(f"Gamma compressed index size: {gamma_compressed_size}")
+print(f"Delta-Gamma compressed index size: {delta_gamma_compressed_size}")
+
