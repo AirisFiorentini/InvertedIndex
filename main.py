@@ -33,7 +33,7 @@ def binary(number):
 def unary(number):
     return '1' * (number - 1) + '0'
 
-def gamma_encode(number):
+def gamma_encode(number):  #TODO: numbers 
     if number == 1:
         return '0'
     else:
