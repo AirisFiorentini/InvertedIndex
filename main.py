@@ -3,6 +3,9 @@ from collections import defaultdict
 import re
 import json
 import time
+from bitarray import bitarray
+from pympler import asizeof
+
 
 # Функции для создания индекса
 def tokenize(text):
@@ -28,20 +31,85 @@ def delta_encode(numbers):
         prev = number
     return delta_encoded
 
+from BitVector import BitVector
+
+def delta_encode_bitvector(numbers):
+    prev = 0
+    delta_encoded = BitVector(size=0)
+    for number in sorted(numbers):
+        delta = number - prev
+        binary = BitVector(intVal=delta)
+        unary = BitVector(intVal=len(binary) - 1)
+        unary.pad_from_left(1)  # Append leading 1
+        delta_encoded += unary
+        delta_encoded += binary[1:]  # Append binary representation without leading 1
+        prev = number
+    return delta_encoded
+
+def delta_decode_bitvector(delta_encoded):
+    numbers = []
+    total = 0
+    i = 0
+    while i < len(delta_encoded):
+        unary_len = delta_encoded[i:].intValue() + 1  # Count unary length
+        i += unary_len
+        binary = BitVector(intVal=1, size=1)
+        binary += delta_encoded[i:i+unary_len]  # Append binary representation
+        delta = binary.intValue()
+        total += delta
+        numbers.append(total)
+        i += unary_len
+    return numbers
+
+def delta_encode_bitvector_compressed(inverted_index):
+    delta_compressed_index = {}
+    for word, post_ids in inverted_index.items():
+        delta_compressed_index[word] = delta_encode_bitvector(list(post_ids))
+    return delta_compressed_index
+
+def pad_to_byte_length(bitvec):
+    length = len(bitvec)
+    pad_size = -length % 8  # Size of padding to reach a byte boundary.
+    return bitvec + BitVector(size=pad_size), length
+
+def gamma_encode_bitvector(number):
+    if number == 1:
+        return pad_to_byte_length(BitVector(size=1, intVal=0))
+    else:
+        binary_num = bin(number)[2:]
+        length = unary(len(binary_num))
+        offset = binary_num[1:]
+        return pad_to_byte_length(BitVector(bitstring=length + offset))
+
+def gamma_encode_bitvector_compressed(inverted_index):
+    """Теперь каждый элемент в gamma_compressed_index[word] - это кортеж, 
+    где первый элемент - это ASCII-строка bitvector, 
+    а второй элемент - это исходная длина bitvector. """
+    gamma_compressed_index = {}
+    for word, post_ids in inverted_index.items():
+        gamma_compressed_index[word] = [(gamma_encode_bitvector(post_id)[0].get_bitvector_in_ascii(), gamma_encode_bitvector(post_id)[1]) for post_id in post_ids]
+    return gamma_compressed_index
+
+
 def binary(number):
     return bin(number)[2:]
 
 def unary(number):
-    return '1' * (number - 1) + '0'
+    return '0' * (number - 1) # '1' * (number - 1) + '0'
 
 def gamma_encode(number):  #TODO: numbers 
-    if number == 1:
-        return '0'
-    else:
-        binary_num = binary(number)
-        length = unary(len(binary_num))
-        offset = binary_num[1:]
-        return length + offset
+    binary_num = binary(number)
+    length = unary(len(binary_num))
+    offset = binary_num
+    return length + offset
+
+    # if number == 1:
+    #     return '0'
+    # else:
+    #     binary_num = binary(number)
+    #     length = unary(len(binary_num))
+    #     offset = binary_num[1:]
+    #     return length + offset
 
 def delta_compress_inverted_index(inverted_index):
     delta_compressed_index = {}
@@ -76,10 +144,10 @@ def save_compressed_index_to_file(index, filename):
     with open(filename, 'w') as f:
         json.dump(index, f)
 
-def gamma_decode(gamma_encoded_number):
-    unary_length = gamma_encoded_number.index('0') + 1
+def gamma_decode(gamma_encoded_number):   # changed
+    unary_length = gamma_encoded_number.index('1')
     binary_offset = gamma_encoded_number[unary_length:]
-    binary_number = '1' + binary_offset
+    binary_number = binary_offset
     return int(binary_number, 2)
 
 def delta_decode(delta_encoded_numbers):
@@ -179,10 +247,51 @@ def save_search_results_to_file(results, filename):
 
 if __name__ == "__main__":
     # Создание, сжатие, сохранение и загрузка индекса
-    inverted_index = create_inverted_index('posts_SPbU.csv')
+    inverted_index = create_inverted_index('posts_MGU.csv') #('test_files/empty_file.csv')
     delta_compressed_index = delta_compress_inverted_index(inverted_index)
     gamma_compressed_index = gamma_compress_inverted_index(inverted_index)
     delta_gamma_compressed_index = gamma_compress_inverted_index(delta_compressed_index)
+
+    # using bitvector 
+    delta_bitvector_compressed_index = delta_encode_bitvector_compressed(delta_compressed_index)  #  (inverted_index)
+    gamma_bitvector_compressed_index = gamma_encode_bitvector_compressed(delta_compressed_index)
+    
+    for word, post_ids in inverted_index.items():
+        inverted_index[word] = str(post_ids)
+
+    for word, post_ids in delta_compressed_index.items():
+        delta_compressed_index[word] = str(post_ids)
+
+    # for word, post_ids in gamma_compressed_index.items():
+    #     lst = []
+    #     for item in post_ids:
+    #         # print(int(item, 2))
+    #         lst.append(binary(int(item, 2)))
+    #     gamma_compressed_index[word] = lst # bitarray(str(post_ids))  
+    
+    for word, post_ids in delta_gamma_compressed_index.items():
+        lst = []
+        for item in post_ids:
+            # print(type(item))
+            lst.append(str(int(item, 2)))
+        delta_gamma_compressed_index[word] = lst
+        
+    # print (gamma_compressed_index)
+
+    original_size = asizeof.asizeof(inverted_index)
+    delta_compressed_size = asizeof.asizeof(delta_compressed_index)
+    gamma_compressed_size = asizeof.asizeof(gamma_compressed_index)
+    delta_gamma_size = asizeof.asizeof(delta_gamma_compressed_index)
+
+    delta_bitvector_size = asizeof.asizeof(delta_bitvector_compressed_index)
+    gamma_bitvector_size = asizeof.asizeof(gamma_bitvector_compressed_index)
+
+    print(f"Original index size: {original_size}")
+    print(f"Delta compressed index size: {delta_compressed_size}")
+    print(f"Gamma compressed index size: {gamma_compressed_size}")
+    print(f"Delta Gamma compressed index size: {delta_gamma_size}")
+    print(f"Delta bitvector compressed index size: {delta_bitvector_size}")
+    print(f"Gamma bitvector compressed index size: {gamma_bitvector_size}")
 
     # Сохранение сжатого индекса в файл
     save_index_to_file(inverted_index, 'inverted_index.json')
@@ -201,14 +310,7 @@ if __name__ == "__main__":
     loaded_index = load_index('gamma_compressed_index.json')
     delta_loaded_index = load_and_decode_delta_index('delta_compressed_index.json')
     gamma_loaded_index = load_and_decode_gamma_index('gamma_compressed_index.json')
-    delta_gamma_loaded_index = load_and_decode_gamma_index('delta_gamma_compressed_index.json')
-    # delta_encoded_index = {word: [delta_encode(post_id) for post_id in post_ids] for word, post_ids in inverted_index.items()}
-    # save_compressed_index_to_file(delta_encoded_index, 'delta_compressed_index.json')
-    # delta_loaded_index = load_and_decode_index('delta_compressed_index.json', delta_decode)
-
-
-    # delta_loaded_index = load_and_decode_index('delta_compressed_index.json', delta_decode)
-    
+    delta_gamma_loaded_index = load_and_decode_gamma_index('delta_gamma_compressed_index.json')    
 
     # Записываем текущее время
     start_time = time.time()
