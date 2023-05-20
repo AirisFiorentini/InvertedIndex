@@ -271,17 +271,23 @@ def save_search_results_to_file(results, filename):
         for message in results:
             f.write(message + '\n' + '-'*120 + '\n')
 
-def get_data_size_of_compressed_index(index):
+def get_data_size_of_compressed_index_gamma_bitvector(index):
     total_size = 0
     for word, post_ids in index.items():
         for bitvec_ascii, _ in post_ids:
             total_size += len(bitvec_ascii)
     return total_size
 
+def get_data_size_of_compressed_index_delta_bitvector(index):
+    total_size = 0
+    for word, post_ids in index.items():
+        total_size += len(post_ids)
+    return total_size
+
 
 if __name__ == "__main__":
     # Создание, сжатие, сохранение и загрузка индекса
-    inverted_index = create_inverted_index('posts_SPbU.csv')  #  ('test_files/empty_file.csv')
+    inverted_index = create_inverted_index('test_files/empty_file.csv') # ('posts_SPbU.csv')
     delta_compressed_index = delta_compress_inverted_index(inverted_index)
     # gamma_compressed_index = gamma_compress_inverted_index(inverted_index)
     delta_gamma_compressed_index = gamma_compress_inverted_index(delta_compressed_index)
@@ -309,15 +315,19 @@ if __name__ == "__main__":
     delta_compressed_size = asizeof.asizeof(delta_compressed_index)
     # gamma_compressed_size = asizeof.asizeof(gamma_compressed_index)
     delta_gamma_size = asizeof.asizeof(delta_gamma_compressed_index)
+    # delta_gamma_size2 = get_data_size_of_compressed_index_delta_bitvector(delta_gamma_compressed_index)
+
 
     delta_bitvector_size = asizeof.asizeof(delta_bitvector_compressed_index)
-    gamma_bitvector_size = get_data_size_of_compressed_index(gamma_bitvector_compressed_index)
+    delta_bitvector_size2 = get_data_size_of_compressed_index_delta_bitvector(delta_bitvector_compressed_index)
+    gamma_bitvector_size = get_data_size_of_compressed_index_gamma_bitvector(gamma_bitvector_compressed_index)
 
     print(f"Original index size: {original_size}")
     print(f"Delta compressed index size: {delta_compressed_size}")
     # print(f"Gamma compressed index size: {gamma_compressed_size}")
     print(f"Delta Gamma compressed index size: {delta_gamma_size}")
     print(f"Delta bitvector compressed index size: {delta_bitvector_size}")
+    print(f"Delta bitvector compressed index size2: {delta_bitvector_size2}")
     print(f"Gamma bitvector compressed index size: {gamma_bitvector_size}")
 
     # Сохранение сжатого индекса в файл
@@ -325,7 +335,7 @@ if __name__ == "__main__":
     # save_compressed_index_to_file(delta_compressed_index, 'delta_compressed_index.json')
     # Сохранение сжатого индекса в файл
     save_compressed_index_to_file(delta_compressed_index, 'delta_compressed_index.json')
-    save_compressed_index_to_file(gamma_compressed_index, 'gamma_compressed_index.json')
+    # save_compressed_index_to_file(gamma_compressed_index, 'gamma_compressed_index.json')
     save_compressed_index_to_file(delta_gamma_compressed_index, 'delta_gamma_compressed_index.json')
 
 
