@@ -287,7 +287,7 @@ def get_data_size_of_compressed_index_delta_bitvector(index):
 
 if __name__ == "__main__":
     # Создание, сжатие, сохранение и загрузка индекса
-    inverted_index = create_inverted_index('test_files/empty_file.csv') # ('posts_SPbU.csv')
+    inverted_index = create_inverted_index('posts_MGU.csv') # ('test_files/empty_file.csv') 
     delta_compressed_index = delta_compress_inverted_index(inverted_index)
     # gamma_compressed_index = gamma_compress_inverted_index(inverted_index)
     delta_gamma_compressed_index = gamma_compress_inverted_index(delta_compressed_index)
