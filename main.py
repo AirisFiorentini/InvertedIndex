@@ -184,6 +184,30 @@ def delta_decode(delta_encoded_numbers):
         numbers.append(total)
     return numbers
 
+def delta_decode_bitvector_compressed(compressed_index):
+    decompressed_index = {}
+    for word, postings_list in compressed_index.items():
+        decompressed_postings_list = []
+        for posting in postings_list:
+            doc_id_bitvector = BitVector(bitstring=posting[0])
+            doc_id = delta_decode(doc_id_bitvector)
+            decompressed_postings_list.append((doc_id, posting[1]))
+        decompressed_index[word] = decompressed_postings_list
+    return decompressed_index
+
+
+def gamma_decode_bitvector_compressed(compressed_index):
+    decompressed_index = {}
+    for word, postings_list in compressed_index.items():
+        decompressed_postings_list = []
+        for posting in postings_list:
+            doc_id_bitvector = BitVector(bitstring=posting[0])
+            doc_id = gamma_decode(doc_id_bitvector)
+            decompressed_postings_list.append((doc_id, posting[1]))
+        decompressed_index[word] = decompressed_postings_list
+    return decompressed_index
+
+
 # def delta_decode(delta_encoded_numbers):
 #     return [delta_decode_single_number(number) for number in delta_encoded_numbers]
 
@@ -331,6 +355,9 @@ if __name__ == "__main__":
     print(f"Delta bitvector compressed index size: {delta_bitvector_size}")
     print(f"Delta bitvector compressed index size2: {delta_bitvector_size2}")
     print(f"Gamma bitvector compressed index size: {gamma_bitvector_size}")
+
+    delta_bitvector_decoded = delta_decode_bitvector_compressed(delta_bitvector_compressed_index)
+    gamma_bitvector_decoded = gamma_decode_bitvector_compressed(gamma_bitvector_compressed_index)
 
     # Сохранение сжатого индекса в файл
     save_index_to_file(inverted_index, 'inverted_index.json')
