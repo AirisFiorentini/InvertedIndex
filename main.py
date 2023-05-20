@@ -5,7 +5,7 @@ import json
 import time
 from pympler import asizeof
 from BitVector import BitVector
-
+import sys
 
 # Функции для создания индекса
 def tokenize(text):
@@ -276,18 +276,20 @@ def get_data_size_of_compressed_index_gamma_bitvector(index):
     for word, post_ids in index.items():
         for bitvec_ascii, _ in post_ids:
             total_size += len(bitvec_ascii)
+        total_size += sys.getsizeof(word)
     return total_size
 
 def get_data_size_of_compressed_index_delta_bitvector(index):
     total_size = 0
     for word, post_ids in index.items():
         total_size += len(post_ids)
+        total_size += sys.getsizeof(word)
     return total_size
 
 
 if __name__ == "__main__":
     # Создание, сжатие, сохранение и загрузка индекса
-    inverted_index = create_inverted_index('posts_MGU.csv') # ('test_files/empty_file.csv') 
+    inverted_index = create_inverted_index('posts_SPbU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
     delta_compressed_index = delta_compress_inverted_index(inverted_index)
     # gamma_compressed_index = gamma_compress_inverted_index(inverted_index)
     delta_gamma_compressed_index = gamma_compress_inverted_index(delta_compressed_index)
