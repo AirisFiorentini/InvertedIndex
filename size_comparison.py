@@ -35,4 +35,3 @@ print(f"Original index size: {original_size}")
 print(f"Delta compressed index size: {delta_compressed_size}")
 print(f"Gamma compressed index size: {gamma_compressed_size}")
 print(f"Delta-Gamma compressed index size: {delta_gamma_compressed_size}")
-

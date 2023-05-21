@@ -3,6 +3,7 @@ from collections import defaultdict
 import re
 from pympler import asizeof
 from BitVector import BitVector
+import time
 
 # Функции для создания индекса
 def tokenize(text):
@@ -104,56 +105,60 @@ def gamma_decode_bitvector_compressed(gamma_compressed_index):
         gamma_decompressed_index[word] = numbers
     return decode_delta_index(gamma_decompressed_index)
 
+# Функция поиска
+def search(query, index):
+    words = tokenize(query)
+    if not words:
+        return set()
+    
+    result = set(index.get(words[0], []))
+    for word in words[1:]:
+        result &= set(index.get(word, []))
+        
+    return result
 
-inverted_index = create_inverted_index('posts_SPbU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
+
+inverted_index = create_inverted_index('posts_MGU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
+
+query = "Ректор МГУ"
+start_time = time.time()
+matching_post_ids = search(query, inverted_index)
+# print(f"Post IDs matching the query '{query}': {matching_post_ids}")
+# Записываем текущее время и вычитаем из него время начала, чтобы получить общее время выполнения
+end_time = time.time()
+query_time = end_time - start_time
+print(f"Query time: {query_time} seconds")
+
+
+print("Inverted index size:", asizeof.asizeof(inverted_index))
 # delta_compressed_index = delta_compress_inverted_index(inverted_index)
 # print('delta', delta_compressed_index['покоряем'])
 # print(delta_compressed_index)
 delta_compressed_index = inverted_index
+start_time = time.time()
 gamma_bitvector_compressed_index = gamma_encode_bitvector_compressed(delta_compressed_index)
+end_time = time.time()
+indexing_time = end_time - start_time
+
+print(f"Indexing time of gamma: {indexing_time} seconds")
+
+
+
 gamma_bitvector_size = asizeof.asizeof(gamma_bitvector_compressed_index) 
 print(f"Gamma bitvector compressed index size: {gamma_bitvector_size}")
-
-def elias_decode(elias_encoded):
-    unary_end = elias_encoded.find('0')  # Find where unary part ends
-    length = unary_end + 1  # Length of the binary number
-    binary_repr = elias_encoded[unary_end + 1: unary_end + 1 + length]  # Get binary representation
-    return int(binary_repr, 2)  # Convert binary to integer
-
-def elias_decode_bitvector(elias_encoded_bitvector):
-    elias_encoded = str(elias_encoded_bitvector)
-    numbers = []
-    start = 0
-    while start < len(elias_encoded):
-        unary_end = elias_encoded.find('0', start)  # Find where unary part ends
-        length = unary_end - start + 1  # Length of the binary number
-        number = elias_decode(elias_encoded[start: unary_end + length])  # Decode number
-        numbers.append(number)
-        start = unary_end + length
-    return numbers
-
-def elias_decode_bitvector_compressed(elias_compressed_index):
-    elias_decompressed_index = {}
-    for word, bitvector in elias_compressed_index.items():
-        # Remove padding
-        bitvector = bitvector[:bitvector.length() - bitvector.length() % 8]
-        numbers = elias_decode_bitvector(bitvector)
-        elias_decompressed_index[word] = numbers
-    return elias_decompressed_index
-
 
 gamma_decompressed_index = gamma_decode_bitvector_compressed(gamma_bitvector_compressed_index)
 #print(smth)
 
-print(inverted_index['покоряем'])
-print(gamma_decompressed_index['покоряем'])
-#print(gamma_decode_bitvector(gamma_bitvector_compressed_index['покоряем']))
+# print(inverted_index['покоряем'])
+# print(gamma_decompressed_index['покоряем'])
+# #print(gamma_decode_bitvector(gamma_bitvector_compressed_index['покоряем']))
 
 
-print(gamma_encode_bitvector([10, 12, 2]))
-print(gamma_decode_bitvector(gamma_encode_bitvector([10, 12, 2])))
+# print(gamma_encode_bitvector([10, 12, 2]))
+# print(gamma_decode_bitvector(gamma_encode_bitvector([10, 12, 2])))
 
-test = {'word':set([10, 12, 2])}
-# print(gamma_decode_bitvector(gamma_encode_bitvector_compressed(test)))
-print(gamma_decode_bitvector_compressed(gamma_encode_bitvector_compressed(test)))
-print(gamma_encode_bitvector_compressed(test)["word"])
+# test = {'word':set([10, 12, 2])}
+# # print(gamma_decode_bitvector(gamma_encode_bitvector_compressed(test)))
+# print(gamma_decode_bitvector_compressed(gamma_encode_bitvector_compressed(test)))
+# print(gamma_encode_bitvector_compressed(test)["word"])

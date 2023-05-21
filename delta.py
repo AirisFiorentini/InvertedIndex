@@ -1,11 +1,9 @@
 import csv
 from collections import defaultdict
 import re
-import json
-import time
 from pympler import asizeof
 from BitVector import BitVector
-import sys
+import time
 
 # Функции для создания индекса
 def tokenize(text):
@@ -116,8 +114,14 @@ def delta_decode_bitvector_compressed(delta_compressed_index):
 
 print()
 print("Delta:")
-inverted_index = create_inverted_index('posts_SPbU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
+inverted_index = create_inverted_index('posts_MGU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
+start_time = time.time()
 delta_bitvector_compressed_index = delta_encode_bitvector_compressed(inverted_index)
+end_time = time.time()
+indexing_time = end_time - start_time
+
+print(f"Indexing time of delta: {indexing_time} seconds")
+
 delta_bitvector_size = asizeof.asizeof(delta_bitvector_compressed_index) 
 print(f"Delta bitvector compressed index size: {delta_bitvector_size}")
 
