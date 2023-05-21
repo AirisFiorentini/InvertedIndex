@@ -39,6 +39,21 @@ def delta_compress_inverted_index(inverted_index):
         delta_compressed_index[word] = delta_encoded
     return delta_compressed_index
 
+def delta_decode(delta_encoded_numbers):
+    numbers = []
+    total = 0
+    for delta in delta_encoded_numbers:
+        total += delta
+        numbers.append(total)
+    return numbers
+
+def decode_delta_index(delta_encoded_index):
+    index = {}
+    for word, encoded_post_ids_list in delta_encoded_index.items():
+        decoded_post_ids = delta_decode(encoded_post_ids_list)
+        index[word] = set(decoded_post_ids)
+    return index
+
 def unary(number):
     return '0' * (number - 1)
 
@@ -71,17 +86,23 @@ def gamma_encode_bitvector_compressed(inverted_index):
         gamma_compressed_index[word] = bitvector
     return gamma_compressed_index
 
+
+
 def gamma_decode_bitvector(gamma_encoded_bitvector):
     gamma_encoded = str(gamma_encoded_bitvector)
     numbers = []
     start = 0
     while start < len(gamma_encoded):
+        # на каждой итерации проверять, что единица действительно нашлась. 
         unary_end = gamma_encoded.find('1', start)  # Find where unary part ends
+        if unary_end == -1:
+            break
         length = unary_end - start + 1  # Length of the binary number
         number = gamma_decode(gamma_encoded[start: unary_end + length])  # Decode number
         numbers.append(number)
         start = unary_end + length
     return numbers
+
 
 # def gamma_decode_bitvector(gamma_encoded_bitvector):
 #     gamma_encoded = str(gamma_encoded_bitvector)
@@ -101,12 +122,14 @@ def gamma_decode_bitvector_compressed(gamma_compressed_index):
     for word, bitvector in gamma_compressed_index.items():
         numbers = gamma_decode_bitvector(bitvector)
         gamma_decompressed_index[word] = numbers
-    return gamma_decompressed_index
+    return decode_delta_index(gamma_decompressed_index)
 
 
-inverted_index = create_inverted_index('test_files/empty_file.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
-delta_compressed_index = delta_compress_inverted_index(inverted_index)
+inverted_index = create_inverted_index('posts_SPbU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
+# delta_compressed_index = delta_compress_inverted_index(inverted_index)
+# print('delta', delta_compressed_index['покоряем'])
 # print(delta_compressed_index)
+delta_compressed_index = inverted_index
 gamma_bitvector_compressed_index = gamma_encode_bitvector_compressed(delta_compressed_index)
 gamma_bitvector_size = asizeof.asizeof(gamma_bitvector_compressed_index) 
 print(f"Gamma bitvector compressed index size: {gamma_bitvector_size}")
@@ -143,29 +166,15 @@ def elias_decode_bitvector_compressed(elias_compressed_index):
 gamma_decompressed_index = gamma_decode_bitvector_compressed(gamma_bitvector_compressed_index)
 #print(smth)
 
-def delta_decode(delta_encoded_numbers):
-    numbers = []
-    total = 0
-    for delta in delta_encoded_numbers:
-        total += delta
-        numbers.append(total)
-    return numbers
-
-# def decode_delta_index(delta_encoded_index):
-#     index = {}
-#     for word, encoded_post_ids_list in delta_encoded_index.items():
-#         # decoded_post_ids = [delta_decode(encoded_post_id) for encoded_post_id in encoded_post_ids_list]
-#         decoded_post_ids = delta_decode(encoded_post_ids_list)
-#         index[word] = set(decoded_post_ids)
-#     return index
-
-def decode_delta_index(delta_encoded_index):
-    index = {}
-    for word, encoded_post_ids_list in delta_encoded_index.items():
-        decoded_post_ids = delta_decode(encoded_post_ids_list)
-        index[word] = set(decoded_post_ids)
-    return index
-
 print(inverted_index['покоряем'])
-print(decode_delta_index(gamma_decompressed_index)['покоряем'])
-# print(gamma_decompressed_index)
+print(gamma_decompressed_index['покоряем'])
+#print(gamma_decode_bitvector(gamma_bitvector_compressed_index['покоряем']))
+
+
+print(gamma_encode_bitvector([10, 12, 2]))
+print(gamma_decode_bitvector(gamma_encode_bitvector([10, 12, 2])))
+
+test = {'word':set([10, 12, 2])}
+# print(gamma_decode_bitvector(gamma_encode_bitvector_compressed(test)))
+print(gamma_decode_bitvector_compressed(gamma_encode_bitvector_compressed(test)))
+print(gamma_encode_bitvector_compressed(test)["word"])
