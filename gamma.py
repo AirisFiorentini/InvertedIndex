@@ -4,10 +4,6 @@ import re
 from pympler import asizeof
 from BitVector import BitVector
 
-# from main import create_inverted_index 
-# from main import delta_compress_inverted_index 
-# from main import delta_encode
-
 # Функции для создания индекса
 def tokenize(text):
     return re.findall(r'\b\w+\b', text.lower())
@@ -86,8 +82,6 @@ def gamma_encode_bitvector_compressed(inverted_index):
         gamma_compressed_index[word] = bitvector
     return gamma_compressed_index
 
-
-
 def gamma_decode_bitvector(gamma_encoded_bitvector):
     gamma_encoded = str(gamma_encoded_bitvector)
     numbers = []
@@ -102,20 +96,6 @@ def gamma_decode_bitvector(gamma_encoded_bitvector):
         numbers.append(number)
         start = unary_end + length
     return numbers
-
-
-# def gamma_decode_bitvector(gamma_encoded_bitvector):
-#     gamma_encoded = str(gamma_encoded_bitvector)
-#     numbers = []
-#     start = 0
-#     while start < len(gamma_encoded):
-#         unary_end = gamma_encoded.find('0', start)  # Find where unary part ends
-#         length = unary_end - start + 1  # Length of the binary number
-#         number = gamma_decode(gamma_encoded[start: unary_end + length])  # Decode number
-#         numbers.append(number)
-#         start = unary_end + length
-#     return numbers
-
 
 def gamma_decode_bitvector_compressed(gamma_compressed_index):
     gamma_decompressed_index = {}
@@ -133,7 +113,6 @@ delta_compressed_index = inverted_index
 gamma_bitvector_compressed_index = gamma_encode_bitvector_compressed(delta_compressed_index)
 gamma_bitvector_size = asizeof.asizeof(gamma_bitvector_compressed_index) 
 print(f"Gamma bitvector compressed index size: {gamma_bitvector_size}")
-
 
 def elias_decode(elias_encoded):
     unary_end = elias_encoded.find('0')  # Find where unary part ends
