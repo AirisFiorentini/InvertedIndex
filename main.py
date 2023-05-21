@@ -69,26 +69,6 @@ def pad_to_byte_length(bitvec):
     length = len(bitvec)
     pad_size = -length % 8  # Size of padding to reach a byte boundary.
     return bitvec + BitVector(size=pad_size), length
-"""
-def gamma_encode_bitvector(number):
-    if number == 1:
-        return pad_to_byte_length(BitVector(size=1, intVal=0))
-    else:
-        binary_num = bin(number)[2:]
-        length = unary(len(binary_num))
-        offset = binary_num[1:]
-        return pad_to_byte_length(BitVector(bitstring=length + offset))
-
-def gamma_encode_bitvector_compressed(inverted_index):
-    # Теперь каждый элемент в gamma_compressed_index[word] - это кортеж, 
-    # где первый элемент - это ASCII-строка bitvector, 
-    # а второй элемент - это исходная длина bitvector. 
-    gamma_compressed_index = {}
-    for word, post_ids in inverted_index.items():
-        gamma_compressed_index[word] = [(gamma_encode_bitvector(post_id)[0].get_bitvector_in_ascii(), gamma_encode_bitvector(post_id)[1]) for post_id in post_ids]
-    return gamma_compressed_index
-
-"""
 
 def gamma_encode_bitvector(numbers):
     gamma_encoded = BitVector(size=0)
@@ -97,9 +77,9 @@ def gamma_encode_bitvector(numbers):
         length = unary(len(binary_num))
         offset = binary_num[1:]
         gamma_number = BitVector(bitstring=length + offset)
-        padded_gamma_number, original_length = pad_to_byte_length(gamma_number)
+        padded_gamma_number, _ = pad_to_byte_length(gamma_number)
         gamma_encoded += padded_gamma_number
-    return gamma_encoded, original_length
+    return gamma_encoded
 
 
 # def gamma_encode_bitvector_compressed(inverted_index): # the second version
@@ -151,16 +131,6 @@ def gamma_compress_inverted_index(delta_compressed_index):  #TODO: rewrite delta
         gamma_compressed_index[word] = gamma_encoded
     return gamma_compressed_index
 
-# Функции для сохранения и загрузки индекса
-# def save_index_to_file(index, filename):
-#     with open(filename, 'w') as f:
-#         json.dump(index, f)
-
-# def save_index_to_file_new(index, filename):
-#     index_to_save = {word: list(post_ids) for word, post_ids in index.items()}
-#     with open(filename, 'w') as f:
-#         json.dump(index_to_save, f)
-
 def save_index_to_file(index, filename):
     index_to_save = {word: list(post_ids) for word, post_ids in index.items()}
     with open(filename, 'w') as f:
@@ -184,16 +154,29 @@ def delta_decode(delta_encoded_numbers):
         numbers.append(total)
     return numbers
 
-def delta_decode_bitvector_compressed(compressed_index):
-    decompressed_index = {}
-    for word, postings_list in compressed_index.items():
-        decompressed_postings_list = []
-        for posting in postings_list:
-            doc_id_bitvector = BitVector(bitstring=posting[0])
-            doc_id = delta_decode(doc_id_bitvector)
-            decompressed_postings_list.append((doc_id, posting[1]))
-        decompressed_index[word] = decompressed_postings_list
-    return decompressed_index
+def delta_decode_bitvector_compressed(delta_compressed_index):
+    delta_decompressed_index = {}
+
+    for word, delta_encoded in delta_compressed_index.items():
+        delta_decompressed_index[word] = delta_decode_bitvector(delta_encoded)
+
+    return delta_decompressed_index
+
+def delta_decode_bitvector(delta_encoded):
+    numbers = []
+    total = 0
+    i = 0
+    while i < len(delta_encoded):
+        unary_len = delta_encoded[i:].intValue() + 1  # Count unary length
+        if i+unary_len > len(delta_encoded):
+            raise Exception(f"Index out of range: i={i}, unary_len={unary_len}, length of delta_encoded={len(delta_encoded)}")
+        binary = BitVector(intVal=1, size=1)
+        binary += delta_encoded[i:i+unary_len]  # Append binary representation without leading 1
+        delta = binary.intValue()
+        total += delta
+        numbers.append(total)
+        i += unary_len
+    return numbers
 
 
 def gamma_decode_bitvector_compressed(compressed_index):
@@ -207,23 +190,6 @@ def gamma_decode_bitvector_compressed(compressed_index):
         decompressed_index[word] = decompressed_postings_list
     return decompressed_index
 
-
-# def delta_decode(delta_encoded_numbers):
-#     return [delta_decode_single_number(number) for number in delta_encoded_numbers]
-
-# def gamma_decode(gamma_encoded_numbers):
-#     return [gamma_decode_single_number(number) for number in gamma_encoded_numbers]
-
-# def delta_decode_single_number(delta_encoded_number):
-#     n = len(delta_encoded_number) // 2
-#     offset = delta_encoded_number[n:]
-#     value = int(''.join(str(x) for x in offset), 2)
-#     return (2 ** n) - 1 + value
-
-# def gamma_decode_single_number(gamma_encoded_number):
-#     n = len(gamma_encoded_number) // 2
-#     value = gamma_encoded_number[n:]
-#     return (2 ** n) - 1 + int(''.join(str(x) for x in value), 2)
 
 def load_index(filename):
     with open(filename, 'r') as f:
@@ -313,7 +279,7 @@ def get_data_size_of_compressed_index_delta_bitvector(index):
 
 if __name__ == "__main__":
     # Создание, сжатие, сохранение и загрузка индекса
-    inverted_index = create_inverted_index('posts_SPbU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
+    inverted_index = create_inverted_index('test_files/empty_file.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
     delta_compressed_index = delta_compress_inverted_index(inverted_index)
     # gamma_compressed_index = gamma_compress_inverted_index(inverted_index)
     delta_gamma_compressed_index = gamma_compress_inverted_index(delta_compressed_index)
