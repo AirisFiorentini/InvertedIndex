@@ -64,7 +64,6 @@ def delta_decode_bitvector(delta_encoded):
         numbers.append(value)
     return numbers
 
-
 def delta_encode_bitvector_compressed(inverted_index):
     delta_compressed_index = {}
     for word, post_ids in inverted_index.items():
@@ -77,19 +76,20 @@ def delta_decode_bitvector_compressed(delta_compressed_index):
         delta_decompressed_index[word] = delta_decode_bitvector(delta_encoded)
     return delta_decompressed_index
 
-print()
-print("Delta:")
-inverted_index = create_inverted_index('posts_MGU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
-start_time = time.time()
-delta_bitvector_compressed_index = delta_encode_bitvector_compressed(inverted_index)
-end_time = time.time()
-indexing_time = end_time - start_time
+if __name__ == "__main__":
+    print()
+    print("Delta:")
+    inverted_index = create_inverted_index('posts_MGU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
+    start_time = time.time()
+    delta_bitvector_compressed_index = delta_encode_bitvector_compressed(inverted_index)
+    end_time = time.time()
+    indexing_time = end_time - start_time
 
-print(f"Indexing time of delta: {indexing_time} seconds")
+    print(f"Indexing time of delta: {indexing_time} seconds")
 
-delta_bitvector_size = asizeof.asizeof(delta_bitvector_compressed_index) 
-print(f"Delta bitvector compressed index size: {delta_bitvector_size}")
+    delta_bitvector_size = asizeof.asizeof(delta_bitvector_compressed_index) 
+    print(f"Delta bitvector compressed index size: {delta_bitvector_size}")
 
-delta_decompressed_index = delta_decode_bitvector_compressed(delta_bitvector_compressed_index)
-print(inverted_index['покоряем'])
-print(delta_decompressed_index['покоряем'])
+    delta_decompressed_index = delta_decode_bitvector_compressed(delta_bitvector_compressed_index)
+    # print(inverted_index['покоряем'])
+    # print(delta_decompressed_index['покоряем'])

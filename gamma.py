@@ -117,48 +117,49 @@ def search(query, index):
         
     return result
 
+if __name__ == "__main__":
 
-inverted_index = create_inverted_index('posts_MGU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
+    inverted_index = create_inverted_index('posts_MGU.csv') # ('test_files/empty_file.csv') # ('test_files/empty_file.csv') ('posts_MGU.csv')
 
-query = "Ректор МГУ"
-start_time = time.time()
-matching_post_ids = search(query, inverted_index)
-# print(f"Post IDs matching the query '{query}': {matching_post_ids}")
-# Записываем текущее время и вычитаем из него время начала, чтобы получить общее время выполнения
-end_time = time.time()
-query_time = end_time - start_time
-print(f"Query time: {query_time} seconds")
-
-
-print("Inverted index size:", asizeof.asizeof(inverted_index))
-# delta_compressed_index = delta_compress_inverted_index(inverted_index)
-# print('delta', delta_compressed_index['покоряем'])
-# print(delta_compressed_index)
-delta_compressed_index = inverted_index
-start_time = time.time()
-gamma_bitvector_compressed_index = gamma_encode_bitvector_compressed(delta_compressed_index)
-end_time = time.time()
-indexing_time = end_time - start_time
-
-print(f"Indexing time of gamma: {indexing_time} seconds")
+    query = "Ректор МГУ"
+    start_time = time.time()
+    matching_post_ids = search(query, inverted_index)
+    # print(f"Post IDs matching the query '{query}': {matching_post_ids}")
+    # Записываем текущее время и вычитаем из него время начала, чтобы получить общее время выполнения
+    end_time = time.time()
+    query_time = end_time - start_time
+    print(f"Query time: {query_time} seconds")
 
 
+    print("Inverted index size:", asizeof.asizeof(inverted_index))
+    # delta_compressed_index = delta_compress_inverted_index(inverted_index)
+    # print('delta', delta_compressed_index['покоряем'])
+    # print(delta_compressed_index)
+    delta_compressed_index = inverted_index
+    start_time = time.time()
+    gamma_bitvector_compressed_index = gamma_encode_bitvector_compressed(delta_compressed_index)
+    end_time = time.time()
+    indexing_time = end_time - start_time
 
-gamma_bitvector_size = asizeof.asizeof(gamma_bitvector_compressed_index) 
-print(f"Gamma bitvector compressed index size: {gamma_bitvector_size}")
-
-gamma_decompressed_index = gamma_decode_bitvector_compressed(gamma_bitvector_compressed_index)
-#print(smth)
-
-# print(inverted_index['покоряем'])
-# print(gamma_decompressed_index['покоряем'])
-# #print(gamma_decode_bitvector(gamma_bitvector_compressed_index['покоряем']))
+    print(f"Indexing time of gamma: {indexing_time} seconds")
 
 
-# print(gamma_encode_bitvector([10, 12, 2]))
-# print(gamma_decode_bitvector(gamma_encode_bitvector([10, 12, 2])))
 
-# test = {'word':set([10, 12, 2])}
-# # print(gamma_decode_bitvector(gamma_encode_bitvector_compressed(test)))
-# print(gamma_decode_bitvector_compressed(gamma_encode_bitvector_compressed(test)))
-# print(gamma_encode_bitvector_compressed(test)["word"])
+    gamma_bitvector_size = asizeof.asizeof(gamma_bitvector_compressed_index) 
+    print(f"Gamma bitvector compressed index size: {gamma_bitvector_size}")
+
+    gamma_decompressed_index = gamma_decode_bitvector_compressed(gamma_bitvector_compressed_index)
+    #print(smth)
+
+    # print(inverted_index['покоряем'])
+    # print(gamma_decompressed_index['покоряем'])
+    # #print(gamma_decode_bitvector(gamma_bitvector_compressed_index['покоряем']))
+
+
+    # print(gamma_encode_bitvector([10, 12, 2]))
+    # print(gamma_decode_bitvector(gamma_encode_bitvector([10, 12, 2])))
+
+    # test = {'word':set([10, 12, 2])}
+    # # print(gamma_decode_bitvector(gamma_encode_bitvector_compressed(test)))
+    # print(gamma_decode_bitvector_compressed(gamma_encode_bitvector_compressed(test)))
+    # print(gamma_encode_bitvector_compressed(test)["word"])
