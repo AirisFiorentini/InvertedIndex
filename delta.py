@@ -20,41 +20,6 @@ def create_inverted_index(csv_filename): # инвертированный инд
                 inverted_index[word].add(post_id)
     return inverted_index
 
-
-def delta_encode_bitvector2(numbers):
-    numbers = sorted(numbers)
-    prev = 0
-    delta_encoded = BitVector(size=0)
-    for number in sorted(numbers):
-        delta = number - prev
-        binary = BitVector(intVal=delta)
-        unary = BitVector(intVal=len(binary))
-        unary.pad_from_left(len(unary)-1)
-        delta_encoded += unary
-        delta_encoded += BitVector(intVal=1)
-        delta_encoded += unary[1:]
-        delta_encoded += binary[1:]  # Append binary representation without leading 1
-        prev = number
-    return delta_encoded
-
-
-
-def delta_decode_bitvector2(delta_encoded):
-    numbers = []
-    total = 0
-    i = 0
-    while i < len(delta_encoded):
-        unary_len = 1
-        while delta_encoded[i + unary_len] == "0":
-            unary_len += 1
-        i += unary_len
-        binary = delta_encoded[i:i+unary_len]
-        delta = int("1" + binary, 2)
-        total += delta
-        numbers.append(total)
-        i += unary_len
-    return numbers
-
 def delta_encode_bitvector(numbers):
     numbers = sorted(numbers)
     prev = 0
